@@ -1,0 +1,71 @@
+#Homework20220407
+#Problem 1
+library(tidyquant)
+library(tidyverse)
+library(dplyr)
+library(lubridate)
+
+#1
+
+data<-tq_get(c("AMZN","FB", "NFLX"),
+             get="stock.prices",
+             from="2019-01-01",
+             to="2021-04-01") %>%
+  select(symbol, date, adjusted)
+view(data)
+
+#2
+
+Dates<- data.frame(Date=seq.Date(from=ymd("2019-01-01"),
+                                  to=ymd("2021-04-01"),
+                                 by="day"))
+
+view(Dates)
+
+Join<-Dates %>%
+  dplyr::left_join(data, by=c("Date"="date"))
+view(Join)
+
+data<-tq_get(c("AMZN","FB", "NFLX"),
+             get="stock.prices",
+             from="2019-01-01",
+             to="2021-04-01") %>%
+  select(symbol, date, adjusted)
+
+Dates<- data.frame(Date=seq.Date(from=ymd("2019-01-01"),
+                                 to=ymd("2021-04-01"),
+                                 by="day",3),
+                   Symbol=c(rep("AMZN", 822), rep("FB", 822), rep("NFLX", 822)))
+ Join<-Dates %>%
+ left_join(data, by=c("Date"="date","Symbol"="symbol")) %>%
+   group_by(Symbol) %>%
+   fill(adjusted, .direction="downup")
+
+#3
+ 
+k<- data.frame(Symbol=c("AMZN" | "FB"),
+               Date=seq.Date(
+             from=ymd("2019-01-01"), 
+             to=ymd("2019-07-01" )|
+               from=ymd("2020-04-01"),
+             to=ymd("2020-07-01"))) #i am not sure how the code should be written
+view(k)
+
+#Problem2
+
+data<-tq_get(c("AMZN","FB", "NFLX"),
+             get="stock.prices",
+             from="2019-01-01",
+             to="2021-04-01") %>%
+  select(symbol, date, adjusted)
+
+Dates<- data.frame(Date=seq.Date(from=ymd("2019-01-01"),
+                                 to=ymd("2021-04-01"),
+                                 by="day",3),
+                   Symbol=c(rep("AMZN", 822), rep("FB", 822), rep("NFLX", 822)))
+Join<-Dates %>%
+  left_join(data, by=c("Date"="date","Symbol"="symbol")) %>%
+  group_by(Symbol) %>%
+  fill(adjusted, .direction="downup") %>%
+  mutate(SMA10=SMA(adjusted,n=10),
+         SMA26=SMA(adjusted, n=26))
