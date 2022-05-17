@@ -17,22 +17,6 @@ view(data)
 #2
 
 Dates<- data.frame(Date=seq.Date(from=ymd("2019-01-01"),
-                                  to=ymd("2021-04-01"),
-                                 by="day"))
-
-view(Dates)
-
-Join<-Dates %>%
-  dplyr::left_join(data, by=c("Date"="date"))
-view(Join)
-
-data<-tq_get(c("AMZN","FB", "NFLX"),
-             get="stock.prices",
-             from="2019-01-01",
-             to="2021-04-01") %>%
-  select(symbol, date, adjusted)
-
-Dates<- data.frame(Date=seq.Date(from=ymd("2019-01-01"),
                                  to=ymd("2021-04-01"),
                                  by="day",3),
                    Symbol=c(rep("AMZN", 822), rep("FB", 822), rep("NFLX", 822)))
@@ -57,6 +41,14 @@ select <- ResultS %>%
    group_by(Symbol)%>%
    slice(c(1, n()))%>%
    ungroup()
+
+#5
+
+  p<- Final %>%
+  mutate(NewDate = substr( Dates , 1, 7)) %>%
+  group_by(Symbol, NewDate) %>%
+  slice_tail()%>%
+  ungroup()
  
  
 #Problem2
@@ -67,13 +59,12 @@ data<-tq_get(c("AMZN","FB", "NFLX"),
              to="2021-04-01") %>%
   select(symbol, date, adjusted)
 
-Dates<- data.frame(Date=seq.Date(from=ymd("2019-01-01"),
-                                 to=ymd("2021-04-01"),
-                                 by="day",3),
-                   Symbol=c(rep("AMZN", 822), rep("FB", 822), rep("NFLX", 822)))
-Join<-Dates %>%
-  left_join(data, by=c("Date"="date","Symbol"="symbol")) %>%
-  group_by(Symbol) %>%
-  fill(adjusted, .direction="downup") %>%
-  mutate(SMA10=SMA(adjusted,n=10),
-         SMA26=SMA(adjusted, n=26))
+SMA <- Final %>%
+  mutate(sma10 =SMA(adjusted, n = 10),
+                sma26 =SMA(adjusted, n = 26),
+                LagSma10 = lag(sma10),
+                LagSma26 = lag(sma26)) %>%
+ filter(!is.na(sma26)) %>%
+ mutate(cross = case_when(LagSma10 > LagSma26 & sma10 < sma26 ~ "from above",
+                                         LagSma10 < LagSma26 & sma10 > sma26 ~ "from below",
+                                         TRUE ~ "no cross"))
